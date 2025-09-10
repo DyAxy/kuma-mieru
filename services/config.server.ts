@@ -3,20 +3,19 @@ import type { GlobalConfig, Maintenance } from '@/types/config';
 import { ConfigError } from '@/utils/errors';
 import { extractPreloadData } from '@/utils/json-processor';
 import { sanitizeJsonString } from '@/utils/json-sanitizer';
-import * as cheerio from 'cheerio';
 import { cache } from 'react';
 import { ApiDataError, logApiError } from './utils/api-service';
 import { customFetchOptions, ensureUTCTimezone } from './utils/common';
 import { customFetch } from './utils/fetch';
 
 function processMaintenanceData(maintenanceList: Maintenance[]): Maintenance[] {
-  return maintenanceList.map((maintenance) => {
+  return maintenanceList.map(maintenance => {
     const processed = {
       ...maintenance,
     };
 
     if (maintenance.timeslotList && maintenance.timeslotList.length > 0) {
-      processed.timeslotList = maintenance.timeslotList.map((slot) => ({
+      processed.timeslotList = maintenance.timeslotList.map(slot => ({
         startDate: ensureUTCTimezone(slot.startDate),
         endDate: ensureUTCTimezone(slot.endDate),
       }));
@@ -124,7 +123,7 @@ export const getGlobalConfig = cache(async (): Promise<GlobalConfig> => {
     console.error(
       'Failed to get configuration data:',
       error instanceof ConfigError ? error.message : 'Unknown error',
-      error,
+      error
     );
 
     return {
@@ -153,37 +152,32 @@ export async function getPreloadData() {
 
     if (!htmlResponse.ok) {
       throw new ConfigError(
-        `Failed to get HTML: ${htmlResponse.status} ${htmlResponse.statusText}`,
+        `Failed to get HTML: ${htmlResponse.status} ${htmlResponse.statusText}`
       );
     }
 
     const html = await htmlResponse.text();
-    const $ = cheerio.load(html);
-    
+    let preloadScript: string | undefined;
+    const matchNew = html.match(/<script[^>]*id=["']preload-data["'][^>]*>([\s\S]*?)<\/script>/i);
+
+    if (matchNew && matchNew[1]) {
+      preloadScript = matchNew[1].trim();
+    }
+
     // Uptime Kuma version > 1.18.4, use script#preload-data to get preload data
     // @see https://github.com/louislam/uptime-kuma/commit/6e07ed20816969bfd1c6c06eb518171938312782
     // & https://github.com/louislam/uptime-kuma/issues/2186#issuecomment-1270471470
-    let preloadScript = $('#preload-data').text();
-
-    if (!preloadScript || preloadScript.trim() === '') {
-      // Uptime Kuma version <= 1.18.4, use script:contains("window.preloadData") to get preload data
-      const scriptWithPreloadData = $('script:contains("window.preloadData")').text();
-      
-      if (scriptWithPreloadData) {
-        const match = scriptWithPreloadData.match(/window\.preloadData\s*=\s*({.*});/);
-        if (match && match[1]) {
-          preloadScript = match[1];
-          console.log('Successfully extracted preload data from window.preloadData');
-        } else {
-          console.error('Failed to extract preload data with regex. Script content:', scriptWithPreloadData.slice(0, 200));
-        }
+    if (!preloadScript) {
+      const matchOld = html.match(/window\.preloadData\s*=\s*({[\s\S]*?});/);
+      if (matchOld && matchOld[1]) {
+        preloadScript = matchOld[1].trim();
+        console.log('Successfully extracted preload data from window.preloadData');
       }
     }
 
-    if (!preloadScript || preloadScript.trim() === '') {
+    if (!preloadScript) {
       console.error('HTML response preview:', html.slice(0, 500));
-      console.error('Available script tags:', $('script').map((i, el) => $(el).attr('id') || 'no-id').get());
-      throw new ConfigError('Preload script tag not found or empty');
+      throw new Error('Preload script tag not found or empty');
     }
 
     try {
@@ -193,7 +187,7 @@ export async function getPreloadData() {
       if (error instanceof SyntaxError) {
         throw new ConfigError(
           `JSON parsing failed: ${error.message}\nProcessed data: ${preloadScript.slice(0, 100)}...`,
-          error,
+          error
         );
       }
       if (error instanceof ConfigError) {
@@ -201,7 +195,7 @@ export async function getPreloadData() {
       }
       throw new ConfigError(
         `Failed to parse preload data: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        error,
+        error
       );
     }
   } catch (error) {
@@ -221,7 +215,7 @@ export async function getPreloadData() {
           : error,
     });
     throw new ConfigError(
-      'Failed to get preload data, please check network connection and server status',
+      'Failed to get preload data, please check network connection and server status'
     );
   }
 }

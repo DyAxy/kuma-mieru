@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import * as cheerio from 'cheerio';
 import { z } from 'zod';
 import { extractPreloadData } from '../utils/json-processor';
 import { sanitizeJsonString } from '../utils/json-sanitizer';
@@ -76,13 +75,12 @@ async function fetchSiteMeta(baseUrl: string, pageId: string) {
     }
 
     const html = await response.text();
-    const $ = cheerio.load(html);
-    const preloadScript = $('#preload-data').text();
-
-    if (!preloadScript) {
+    const match = html.match(/<script[^>]*id=["']preload-data["'][^>]*>([\s\S]*?)<\/script>/i);
+    if (!match || !match[1]) {
       throw new Error('Preload data script tag not found');
     }
 
+    const preloadScript = match[1];
     const jsonStr = sanitizeJsonString(preloadScript);
     const preloadData = extractPreloadData(jsonStr);
 
