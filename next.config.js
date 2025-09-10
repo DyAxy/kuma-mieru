@@ -1,9 +1,10 @@
 /** @type {import('next').NextConfig} */
-import { readFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import createNextIntlPlugin from 'next-intl/plugin';
 import bundleAnalyzer from '@next/bundle-analyzer';
+import createNextIntlPlugin from 'next-intl/plugin';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import packageJson from './package.json' with { type: 'json' };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -21,6 +22,10 @@ const getImageDomains = () => {
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 const baseConfig = {
+  env: {
+    APP_VERSION: packageJson.version,
+  },
+
   poweredByHeader: false,
   compress: true,
 

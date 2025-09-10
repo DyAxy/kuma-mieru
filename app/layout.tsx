@@ -7,7 +7,6 @@ import Analytics from '@/components/basic/google-analytics';
 import { Navbar } from '@/components/basic/navbar';
 import { fontMono, fontSans } from '@/config/fonts';
 import { siteConfig } from '@/config/site';
-import packageJson from '@/package.json';
 import { getGlobalConfig } from '@/services/config.server';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
@@ -24,7 +23,7 @@ export const metadata: Metadata = {
   icons: {
     icon: siteConfig.icon,
   },
-  generator: `https://github.com/Alice39s/kuma-mieru v${packageJson.version}`,
+  generator: `https://github.com/Alice39s/kuma-mieru v${process.env.APP_VERSION}`,
   formatDetection: {
     email: false,
     address: false,
