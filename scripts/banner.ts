@@ -1,7 +1,6 @@
+import chalk from 'chalk';
 import fs from 'node:fs';
 import path from 'node:path';
-import chalk from 'chalk';
-import packageJson from '../package.json';
 
 const banner = `
 ██╗  ██╗██╗   ██╗███╗   ███╗ █████╗     ███╗   ███╗██╗███████╗██████╗ ██╗   ██╗
@@ -133,7 +132,7 @@ const configGroups: ConfigGroup[] = [
 
 const printStartupInfo = () => {
   console.log(chalk.cyan(banner));
-  console.log(chalk.green(`🚀 Kuma Mieru [v${packageJson.version}] is starting...\n`));
+  console.log(chalk.green(`🚀 Kuma Mieru [v${process.env.APP_VERSION}] is starting...\n`));
 
   if (generatedConfig) {
     console.log(chalk.green('[banner] [printStartupInfo] [config file found]\n'));
